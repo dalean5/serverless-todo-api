@@ -17,6 +17,17 @@ get_session = sessionmaker(bind=create_engine(config.get_postgres_uri()))
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Python HTTP trigger function processed a request.")
 
+    try:
+        id = req.route_params.get("id")
+        id = int(id)
+    except ValueError as e:
+        logging.exception(e)
+        return func.HttpResponse(
+            body=json.dumps({"msg": f"Invalid route parameter - {id}"}),
+            status_code=400,
+            mimetype="application/json",
+        )
+
     # check if payload was actually passed, raise 400 error if not
     try:
         data = req.get_json()
@@ -37,9 +48,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         session = get_session()
         repo = repository.SqlAlchemyRepository(session)
         services.update_todo(
-            data.description, data.due_date, data.is_complete, repo, session
+            id, data.description, data.due_date, data.is_complete, repo, session
         )
-        return func.HttpResponse(status_code=201, mimetype="application/json")
+        return func.HttpResponse(status_code=204, mimetype="application/json")
     except services.TodoNotFound as e:
         return func.HttpResponse(
             body=json.dumps(e, default=str),

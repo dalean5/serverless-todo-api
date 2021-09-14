@@ -54,5 +54,4 @@ def update_todo(
 
     found_todo.description = description
     found_todo.due_date = due_date
-    repo.update(found_todo)
     session.commit()
